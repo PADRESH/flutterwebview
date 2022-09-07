@@ -50,20 +50,20 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   late String _downloadPath;
- // ReceivePort port = ReceivePort();
+  ReceivePort port = ReceivePort();
 
   @override
   void initState() {
     super.initState();
-/*    IsolateNameServer.registerPortWithName(port.sendPort, "downloads");
+    IsolateNameServer.registerPortWithName(port.sendPort, "downloads");
     port.listen((message) {
       String id = message[0];
-      FlutterDownloader.loadTasksWithRawQuery(query: "SELECT * FROM task WHERE task_id=$id").then((taskList) => {
+      FlutterDownloader.loadTasksWithRawQuery(query: "SELECT * FROM task WHERE task_id='$id'").then((taskList) => {
         if (taskList != null && taskList.isNotEmpty) {
           extractArchive(taskList.first)
         }
       });
-    });*/
+    });
     FlutterDownloader.registerCallback(downloadCallback, step: 1);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       asyncInitState();
@@ -79,14 +79,13 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     var fileList = savedDir.listSync();
     for (var element in fileList) {
-     // print('size: ${element.statSync().size}, name: ${element.path}');
+      print('size: ${element.statSync().size}, name: ${element.path}');
       element.deleteSync(recursive: true);
     }
     fileList = savedDir.listSync();
     if (fileList.isEmpty) {
-      downloadArchive("https://10.0.2.2:3000/nick", savedDir.path, "nick1.zip");
+      downloadArchive("https://10.0.2.2:3000/nick", savedDir.path, "nick.zip");
     }
-
   }
 
   Future<void> extractArchive(DownloadTask task) async {
@@ -96,6 +95,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   }
 
+  @pragma('vm:entry-point')
   static void downloadCallback(
       String id, DownloadTaskStatus status, int progress) {
     // download finished
@@ -107,14 +107,13 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<String?> downloadArchive(String url, String dir, String file) async {
-    final taskId = await   FlutterDownloader.enqueue(
+    return await FlutterDownloader.enqueue(
       url: url,
       savedDir: dir,
       showNotification: false,
       fileName: file,
       openFileFromNotification: false, // click on notification to open downloaded file (for Android)
     );
-    return taskId;
   }
 
   Future<String?> getDownloadPath() async {
@@ -132,7 +131,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return externalStorageDirPath;
   }
 
-  static Future<String?> getDocumentsPath() async {
+  Future<String?> getDocumentsPath() async {
     String? externalStorageDirPath;
     if (Platform.isAndroid) {
       try {
